@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-serving
+  namespace: ml-serving
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ml-serving
+  template:
+    metadata:
+      labels:
+        app: ml-serving
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8080"
+    spec:
+      containers:
+        - name: ml-serving
+          image: ml-serving:latest
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: "2"
+              memory: "4Gi"
+              nvidia.com/gpu: "1"
+            limits:
+              cpu: "4"
+              memory: "8Gi"
+              nvidia.com/gpu: "1"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 5
